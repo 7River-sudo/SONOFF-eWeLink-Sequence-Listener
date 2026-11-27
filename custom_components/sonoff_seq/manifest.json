@@ -3,7 +3,7 @@
   "name": "SONOFF eWeLink Sequence Listener",
   "version": "0.3.0",
   "config_flow": true,
-  "documentation": "https://github.com/AlexxIT/SonoffLAN",
+  "documentation": "https://github.com/7River-sudo/SONOFF-eWeLink-Sequence-Listener",
   "dependencies": [
     "zeroconf"
   ],

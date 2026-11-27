@@ -17,7 +17,7 @@ Die Integration:
 - kann **beliebig viele Relais** verwalten
 - gibt jedem Relais einen **frei wählbaren Namen**
 - legt jedes Relais als eigenes **Home-Assistant-Gerät** an
-- erstellt je Gerät einen deaktiviert-unaufdringlichen Diagnosewert `Sequence`
+- erstellt je Gerät einen Diagnose-Sensor `Sequence`
 - ignoriert IPv4-/IPv6-Duplikate mit derselben `seq`
 - verwendet den ersten Wert nach Start als Baseline
 - unterdrückt nach einer längeren mDNS-Trennung den ersten neuen Wert als Baseline
@@ -74,9 +74,11 @@ Beispieldaten:
     old_seq: "49"
     seq: "50"
 
+Die verwendeten Device-IDs, Gerätenamen und Entitäts-IDs sind fiktive Beispiele und müssen an die eigene Home-Assistant-Installation angepasst werden.
+
 ## Empfohlener Test
 
-Zuerst NICHT direkt die light toggeln, sondern eine Benachrichtigung erzeugen:
+Zuerst NICHT direkt `light.example` umschalten, sondern eine Benachrichtigung erzeugen:
 
 ```yaml
 alias: TEST - light Sonoff Seq
@@ -126,6 +128,8 @@ Vor dem dauerhaften Einsatz sollte das jeweilige Relais deshalb zunächst über
 mehrere Stunden beobachtet werden. Ein ungewolltes `seq`-Event würde sonst
 ebenfalls die Automation auslösen.
 
+Die ausgewerteten mDNS-Daten sind nicht authentifiziert. Manipulierte Nachrichten im lokalen Netzwerk können unbeabsichtigte Schaltvorgänge auslösen. Die Integration ist daher nicht für sicherheitskritische Anwendungen vorgesehen.
+
 
 ## v0.3.0 – fester virtueller EIN/AUS-Zustand
 
@@ -161,13 +165,13 @@ alias: exampleroom - light
 triggers:
   - trigger: state
     entity_id:
-      - switch.exampleroom_seq_wallswitch
+      - switch.exampleroom_light_wandschalter
     to: "on"
     id: "on"
 
   - trigger: state
     entity_id:
-      - switch.exampleroom_seq_wallswitch
+      - switch.exampleroom_light_wandschalter
     to: "off"
     id: "off"
 
@@ -193,3 +197,7 @@ mode: single
 ```
 
 Das Event `sonoff_seq_change` enthält zusätzlich `switch_state: on|off`.
+
+## Lizenz
+
+Dieses Projekt steht unter der [Sustainable Use License 1.0](LICENSE.md).

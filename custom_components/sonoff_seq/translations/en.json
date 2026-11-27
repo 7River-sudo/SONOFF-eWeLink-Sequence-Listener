@@ -1,0 +1,22 @@
+{
+  "title": "SONOFF eWeLink Sequence Listener",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Add SONOFF relay",
+        "description": "Add an eWeLink device using its device ID. The device ID can be found in the mDNS name, e.g. `eWeLink_1000abcdef`.",
+        "data": {
+          "device_id": "eWeLink Device ID",
+          "name": "Name in Home Assistant"
+        }
+      }
+    },
+    "error": {
+      "invalid_device_id": "The device ID is invalid.",
+      "name_required": "Please enter a name."
+    },
+    "abort": {
+      "already_configured": "This device is already configured."
+    }
+  }
+}
