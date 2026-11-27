@@ -1,72 +1,74 @@
 # SONOFF eWeLink Sequence Listener
 
-Lokale Home-Assistant-Custom-Integration für SONOFF MINIR4M im
-**Detach-Relay-Modus**, wenn der externe S1/S2-Schalter über Matter nicht als
-eigenes Ereignis bereitgestellt wird.
+**🇬🇧 English** | [🇩🇪 Deutsch](README.de.md)
 
-## Konzept
+Local Home Assistant custom integration for SONOFF MINIR4M in
+**Detach Relay Mode**, when the external S1/S2 switch is not exposed as a
+separate event via Matter.
 
-Der MINIR4M veröffentlicht über `_ewelink._tcp.local.` unverschlüsselte
-Metadaten und eine unverschlüsselte `seq`-Nummer. Der eigentliche Payload ist
-bei normaler Firmware verschlüsselt (`encrypt=true`), aber für diesen
-Workaround wird nur eine Änderung der `seq` ausgewertet.
+## Concept
 
-Die Integration:
+The MINIR4M publishes unencrypted metadata and an unencrypted `seq` number
+via `_ewelink._tcp.local.`. With standard firmware, the actual payload is
+encrypted (`encrypt=true`), but this workaround only evaluates changes to
+`seq`.
 
-- nutzt **einen einzigen gemeinsamen mDNS/Zeroconf-Listener**
-- kann **beliebig viele Relais** verwalten
-- gibt jedem Relais einen **frei wählbaren Namen**
-- legt jedes Relais als eigenes **Home-Assistant-Gerät** an
-- erstellt je Gerät einen Diagnose-Sensor `Sequence`
-- ignoriert IPv4-/IPv6-Duplikate mit derselben `seq`
-- verwendet den ersten Wert nach Start als Baseline
-- unterdrückt nach einer längeren mDNS-Trennung den ersten neuen Wert als Baseline
-- feuert bei einer echten Änderung ein HA-Event `sonoff_seq_change`
+The integration:
+
+- uses **a single shared mDNS/Zeroconf listener**
+- can manage **any number of relays**
+- assigns each relay a **freely configurable name**
+- creates a separate **Home Assistant device** for each relay
+- creates a diagnostic sensor named `Sequence` for each device
+- ignores IPv4/IPv6 duplicates with the same `seq`
+- uses the first value after startup as a baseline
+- suppresses the first new value after a prolonged mDNS disconnection by treating it as a baseline
+- fires a Home Assistant event named `sonoff_seq_change` when an actual change occurs
 
 ## Installation
 
-Kopiere:
+Copy:
 
     custom_components/sonoff_seq
 
-nach:
+to:
 
     /config/custom_components/sonoff_seq
 
-Danach Home Assistant **vollständig neu starten**.
+Then **restart Home Assistant completely**.
 
-Anschließend:
+Next:
 
-1. Einstellungen → Geräte & Dienste
-2. Integration hinzufügen
+1. Settings → Devices & services
+2. Add integration
 3. `SONOFF eWeLink Sequence Listener`
-4. Device-ID eingeben, z. B. `1000abcdef`
-5. frei wählbaren Namen vergeben, z. B. `exampleroom - light`
+4. Enter the device ID, e.g. `1000abcdef`
+5. Assign a name of your choice, e.g. `exampleroom - light`
 
-Für jedes weitere Relais die Integration erneut hinzufügen. Intern bleibt es
-trotzdem **ein gemeinsamer mDNS-Listener**.
+Add the integration again for each additional relay. Internally, it still
+uses **a single shared mDNS listener**.
 
-## Device-ID finden
+## Finding the device ID
 
-Auf einem Rechner im Netz:
+On a computer on the network:
 
     avahi-browse -rt _ewelink._tcp
 
-Beispiel:
+Example:
 
     eWeLink_1000abcdef
 
-Die Device-ID ist dann:
+The device ID is then:
 
     1000abcdef
 
 ## Event
 
-Bei einer Änderung:
+When a change occurs:
 
     event_type: sonoff_seq_change
 
-Beispieldaten:
+Example data:
 
     entry_id: "..."
     device_id: "1000abcdef"
@@ -74,11 +76,11 @@ Beispieldaten:
     old_seq: "49"
     seq: "50"
 
-Die verwendeten Device-IDs, Gerätenamen und Entitäts-IDs sind fiktive Beispiele und müssen an die eigene Home-Assistant-Installation angepasst werden.
+The device IDs, device names and entity IDs used here are fictional examples and must be adapted to your own Home Assistant installation.
 
-## Empfohlener Test
+## Recommended test
 
-Zuerst NICHT direkt `light.example` umschalten, sondern eine Benachrichtigung erzeugen:
+Do NOT toggle `light.example` directly at first. Create a notification instead:
 
 ```yaml
 alias: TEST - light Sonoff Seq
@@ -91,7 +93,7 @@ triggers:
 actions:
   - action: persistent_notification.create
     data:
-      title: "SONOFF Schalter erkannt"
+      title: "SONOFF switch detected"
       message: >-
         {{ trigger.event.data.name }}:
         seq {{ trigger.event.data.old_seq }} → {{ trigger.event.data.seq }}
@@ -99,8 +101,8 @@ actions:
 mode: single
 ```
 
-Wenn nur echte Wippenbetätigungen Ereignisse erzeugen, kann danach die
-Light-Automation verwendet werden:
+If only actual rocker switch operations generate events, the light automation
+can then be used:
 
 ```yaml
 alias: exampleroom - light
@@ -118,47 +120,46 @@ actions:
 mode: single
 ```
 
-## Wichtige Einschränkung
+## Important limitation
 
-Die Integration kann den verschlüsselten eWeLink-Payload **nicht** lesen.
-Darum kann sie nicht kryptografisch unterscheiden, ob eine `seq`-Änderung
-wirklich von S1/S2 oder von einer anderen Geräteaktion stammt.
+The integration **cannot** read the encrypted eWeLink payload.
+It therefore cannot cryptographically distinguish whether a change in `seq`
+actually originates from S1/S2 or from another device action.
 
-Vor dem dauerhaften Einsatz sollte das jeweilige Relais deshalb zunächst über
-mehrere Stunden beobachtet werden. Ein ungewolltes `seq`-Event würde sonst
-ebenfalls die Automation auslösen.
+Before permanent use, the relay should be monitored for several hours.
+An unintended `seq` event would otherwise also trigger the automation.
 
-Die ausgewerteten mDNS-Daten sind nicht authentifiziert. Manipulierte Nachrichten im lokalen Netzwerk können unbeabsichtigte Schaltvorgänge auslösen. Die Integration ist daher nicht für sicherheitskritische Anwendungen vorgesehen.
+The mDNS data being evaluated is not authenticated. Manipulated messages on the local network can trigger unintended switching operations. The integration is therefore not intended for safety-critical applications.
 
 
-## v0.3.0 – fester virtueller EIN/AUS-Zustand
+## v0.3.0 – fixed virtual ON/OFF state
 
-Zusätzlich zum Diagnose-Sensor `Sequence` legt jedes Gerät jetzt einen
-virtuellen Schalter `Wandschalter` an.
+In addition to the `Sequence` diagnostic sensor, each device now creates a
+virtual switch named `Wandschalter` (wall switch).
 
-Wichtig: Dieser virtuelle Schalter steuert NICHT das physische Relais des
-MINIR4M. Er bildet nur die S1/S2-Wippe als festen ON/OFF-Zustand ab.
+Important: This virtual switch does NOT control the physical relay of the
+MINIR4M. It only represents the S1/S2 rocker switch as a fixed ON/OFF state.
 
-Jede bestätigte `seq`-Änderung schaltet:
+Each confirmed change in `seq` toggles the state:
 
     off -> on -> off -> on ...
 
-Der virtuelle Zustand wird über Home-Assistant-Neustarts gespeichert.
+The virtual state is preserved across Home Assistant restarts.
 
-### Einmal synchronisieren
+### Initial synchronization
 
-Da der verschlüsselte eWeLink-Payload nicht verrät, welche Wippenstellung
-physisch EIN oder AUS ist:
+Because the encrypted eWeLink payload does not reveal which physical rocker
+position is ON or OFF:
 
-1. Wippe in die Stellung bringen, die künftig AUS sein soll.
-2. In Home Assistant die Entität `Wandschalter` einmal manuell auf AUS setzen.
-3. Danach entsprechen die beiden Wippenstellungen fest EIN/AUS, solange keine
-   Schalterereignisse während einer längeren HA-Ausfallzeit verpasst werden.
+1. Move the rocker to the position that should represent OFF.
+2. Manually set the `Wandschalter` entity to OFF in Home Assistant once.
+3. The two rocker positions then correspond to fixed ON/OFF states, as long as no
+   switch events are missed during an extended Home Assistant outage.
 
-Wenn die Zuordnung einmal nicht mehr stimmt, den virtuellen `Wandschalter`
-einfach erneut manuell auf die aktuelle physische Stellung synchronisieren.
+If the mapping becomes incorrect, simply resynchronize the virtual
+`Wandschalter` with the current physical switch position manually.
 
-### Automation mit festem EIN/AUS
+### Automation with fixed ON/OFF
 
 ```yaml
 alias: exampleroom - light
@@ -196,8 +197,8 @@ actions:
 mode: single
 ```
 
-Das Event `sonoff_seq_change` enthält zusätzlich `switch_state: on|off`.
+The `sonoff_seq_change` event also includes `switch_state: on|off`.
 
-## Lizenz
+## License
 
-Dieses Projekt steht unter der [Sustainable Use License 1.0](LICENSE.md).
+This project is licensed under the [Sustainable Use License 1.0](LICENSE.md).
